@@ -3,7 +3,7 @@
     <app-audio-player ref="audioPlayer" :bookmarks="bookmarks" :sleep-timer-running="isSleepTimerRunning" :sleep-time-remaining="sleepTimeRemaining" @selectPlaybackSpeed="showPlaybackSpeedModal = true" @updateTime="(t) => (currentTime = t)" @showSleepTimer="showSleepTimer" @showBookmarks="showBookmarks" />
 
     <modals-playback-speed-modal v-model="showPlaybackSpeedModal" :playback-rate.sync="playbackSpeed" @update:playbackRate="updatePlaybackSpeed" @change="changePlaybackSpeed" />
-    <modals-sleep-timer-modal v-model="showSleepTimerModal" :current-time="sleepTimeRemaining" :sleep-timer-running="isSleepTimerRunning" :current-end-of-chapter-time="currentEndOfChapterTime" @change="selectSleepTimeout" @cancel="cancelSleepTimer" @increase="increaseSleepTimer" @decrease="decreaseSleepTimer" />
+    <modals-sleep-timer-modal v-model="showSleepTimerModal" :current-time="sleepTimeRemaining" :sleep-timer-running="isSleepTimerRunning" :current-end-of-chapter-time="currentEndOfChapterTime" :chapters="chapters" :current-chapter-id="currentChapterID" @change="selectSleepTimeout" @cancel="cancelSleepTimer" @increase="increaseSleepTimer" @decrease="decreaseSleepTimer" />
     <modals-bookmarks-modal v-model="showBookmarksModal" :bookmarks="bookmarks" :current-time="currentTime" :library-item-id="serverLibraryItemId" @select="selectBookmark" />
   </div>
 </template>
@@ -33,7 +33,9 @@ export default {
       sleepInterval: null,
       currentEndOfChapterTime: 0,
       serverLibraryItemId: null,
-      serverEpisodeId: null
+      serverEpisodeId: null,
+      chapters: [],
+      currentChapterID: 0
     }
   },
   watch: {
@@ -85,10 +87,22 @@ export default {
       this.sleepTimeRemaining = sleepTimeRemaining
     },
     showSleepTimer() {
-      if (this.$refs.audioPlayer && this.$refs.audioPlayer.currentChapter) {
-        this.currentEndOfChapterTime = Math.floor(this.$refs.audioPlayer.currentChapter.end)
-      } else {
-        this.currentEndOfChapterTime = 0
+      if (this.$refs.audioPlayer) {
+        if (this.$refs.audioPlayer.currentChapter) {
+          this.currentEndOfChapterTime = Math.floor(this.$refs.audioPlayer.currentChapter.end)
+        } else {
+          this.currentEndOfChapterTime = 0
+        }
+        if (this.$refs.audioPlayer.chapters) {
+          this.chapters = this.$refs.audioPlayer.chapters
+        } else {
+          this.chapters = []
+        }
+        if (this.$refs.audioPlayer.currentChapter) {
+          this.currentChapterID = this.$refs.audioPlayer.currentChapter.id
+        } else {
+          this.currentChapterID = 0
+        }
       }
       this.showSleepTimerModal = true
     },

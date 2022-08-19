@@ -21,7 +21,27 @@
           </div>
           <ui-btn @click="clickedOption(manualTimeoutMin)" class="w-full">Set Timer</ui-btn>
         </div>
-        <ul v-show="!manualTimerModal" v-if="!sleepTimerRunning" class="h-full w-full" role="listbox" aria-labelledby="listbox-label">
+        <div v-show="chapterTimerModal" class="px-2 py-4">
+          <div class="text-gray-50 select-none relative py-3 pl-9" @click="chapterTimerModal = false">
+            <div class="absolute right-1 top-0 bottom-0 h-full flex items-center">
+              <span class="material-icons text-2xl">close</span>
+            </div>
+          </div>
+          <ul class="h-full w-full" role="listbox" aria-labelledby="listbox-label">
+            <template v-for="chapter in futureChapters">
+              <li :key="chapter.id" :id="`chapterTimer-row-${chapter.id}`" class="text-gray-50 select-none relative py-4 cursor-pointer hover:bg-black-400" :class="currentChapterID === chapter.id ? 'bg-bg bg-opacity-80' : ''" role="option" @click="clickedOption($secondsToTimestamp(chapter.end))">
+                <div class="relative flex items-center pl-3" style="padding-right: 4.5rem">
+                  <p class="font-normal block truncate text-sm text-white text-opacity-80">{{ chapter.title }}</p>
+                  <div class="absolute top-0 right-3 -mt-0.5">
+                    <span class="font-mono text-white text-opacity-90 leading-3" style="letter-spacing: -0.5px">{{ $secondsToTimestamp(chapter.start) }}</span>
+                  </div>
+                </div>
+
+                <div v-show="chapter.id === currentChapterID" class="w-0.5 h-full absolute top-0 left-0 bg-yellow-400" />
+              </li>
+            </template>
+          </ul>
+          <ul v-show="!manualTimerModal && !chapterTimerModal" v-if="!sleepTimerRunning" class="h-full w-full" role="listbox" aria-labelledby="listbox-label">
           <template v-for="timeout in timeouts">
             <li :key="timeout" class="text-gray-50 select-none relative py-4 cursor-pointer hover:bg-black-400" role="option" @click="clickedOption(timeout)">
               <div class="flex items-center justify-center">
@@ -29,7 +49,7 @@
               </div>
             </li>
           </template>
-          <li v-if="currentEndOfChapterTime" class="text-gray-50 select-none relative py-4 cursor-pointer hover:bg-black-400" role="option" @click="clickedChapterOption(timeout)">
+          <li v-if="currentEndOfChapterTime" class="text-gray-50 select-none relative py-4 cursor-pointer hover:bg-black-400" role="option" @click="chapterTimerModal = true">
             <div class="flex items-center justify-center">
               <span class="font-normal block truncate text-lg text-center">End of Chapter</span>
             </div>
@@ -60,11 +80,14 @@ export default {
     value: Boolean,
     currentTime: Number,
     sleepTimerRunning: Boolean,
-    currentEndOfChapterTime: Number
+    currentEndOfChapterTime: Number,
+    chapters: Array,
+    currentChapterID: Number
   },
   data() {
     return {
-      manualTimerModal: null,
+      manualTimerModal: false,
+      chapterTimerModal: false,
       manualTimeoutMin: 0,
     }
   },
@@ -82,6 +105,12 @@ export default {
     },
     timeRemainingPretty() {
       return this.$secondsToTimestamp(this.currentTime)
+    },
+    futureChapters() {
+      this.chapters.filter(function(item){
+        console.log("hi")
+        return item.id >= this.currentChapterID
+      })
     }
   },
   methods: {
@@ -93,6 +122,7 @@ export default {
       var timeout = timeoutMin * 1000 * 60
       this.show = false
       this.manualTimerModal = false
+      this.chapterTimerModal = false
       this.$nextTick(() => this.$emit('change', { time: timeout, isChapterTime: false }))
     },
     cancelSleepTimer() {
